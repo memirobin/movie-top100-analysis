@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猫眼电影TOP100数据分析</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-4 mb-2">猫眼电影TOP100数据分析报告</h1>
+                    <p class="lead mb-0">基于猫眼电影TOP100榜单的深度数据可视化分析</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="text-light">数据更新时间: <span id="update-time">2024年1月</span></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- 数据概览卡片 -->
+        <h2 class="section-title">数据概览</h2>
+        <div class="row" id="stats-cards"></div>
+
+        <!-- 核心分析图表 -->
+        <div class="row">
+            <div class="col-md-6">
+                <h3 class="section-title">年代分布分析</h3>
+                <div class="chart-container" id="decade-chart"></div>
+            </div>
+            <div class="col-md-6">
+                <h3 class="section-title">评分分布分析</h3>
+                <div class="chart-container" id="rating-chart"></div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h3 class="section-title">地域分布分析</h3>
+                <div class="chart-container" id="region-chart"></div>
+            </div>
+            <div class="col-md-6">
+                <h3 class="section-title">演员影响力分析</h3>
+                <div class="chart-container" id="actor-chart"></div>
+            </div>
+        </div>
+
+        <!-- TOP10排行榜 -->
+        <h2 class="section-title">TOP10电影排行榜</h2>
+        <div class="chart-container" id="top10-chart"></div>
+
+        <!-- 完整数据表格 -->
+        <h2 class="section-title">完整数据浏览</h2>
+        <input type="text" class="form-control search-box" placeholder="🔍 搜索电影名称、演员..." id="search-input">
+        <div class="table-container">
+            <table class="table table-hover" id="movie-table">
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>电影名称</th>
+                        <th>评分</th>
+                        <th>主演</th>
+                        <th>上映年份</th>
+                        <th>地区</th>
+                    </tr>
+                </thead>
+                <tbody id="movie-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container text-center">
+            <p>数据来源：猫眼电影TOP100 | 分析工具：Python + ECharts | 仅供学习使用</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="data.js"></script>
+    <script>
+        // 初始化所有图表
+        document.addEventListener('DOMContentLoaded', function() {
+            initStatsCards();
+            initDecadeChart();
+            initRatingChart();
+            initRegionChart();
+            initActorChart();
+            initTop10Chart();
+            initDataTable();
+            
+            document.getElementById('update-time').textContent = new Date().toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: 'long'
+            });
+        });
+
+        function initStatsCards() {
+            const stats = movieData.stats;
+            const cardsContainer = document.getElementById('stats-cards');
+            
+            const cards = [
+                { number: stats.total, label: '总电影数', icon: '🎬' },
+                { number: stats.avgRating, label: '平均评分', icon: '⭐' },
+                { number: stats.yearRange, label: '年代跨度', icon: '📅' },
+                { number: stats.completeness, label: '数据完整度', icon: '✅' }
+            ];
+            
+            cardsContainer.innerHTML = cards.map(card => `
+                <div class="col-md-3">
+                    <div class="stat-card text-center">
+                        <div class="stat-number">${card.icon} ${card.number}</div>
+                        <div class="stat-label">${card.label}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function initDecadeChart() {
+            const chart = echarts.init(document.getElementById('decade-chart'));
+            const option = {
+                tooltip: { trigger: 'axis' },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'category', data: movieData.decades.map(item => item.name) },
+                yAxis: { type: 'value' },
+                series: [{
+                    data: movieData.decades.map(item => ({ value: item.value })),
+                    type: 'bar',
+                    barWidth: '60%',
+                    itemStyle: {
+                        borderRadius: [4, 4, 0, 0],
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#2a5298' }, { offset: 1, color: '#1e3c72' }
+                        ])
+                    },
+                    label: { show: true, position: 'top', formatter: '{c}部' }
+                }]
+            };
+            chart.setOption(option);
+            window.addEventListener('resize', () => chart.resize());
+        }
+
+        function initRatingChart() {
+            const chart = echarts.init(document.getElementById('rating-chart'));
+            const option = {
+                tooltip: { trigger: 'item', formatter: '{b}: {c}部 ({d}%)' },
+                legend: { orient: 'vertical', right: 10, top: 'center' },
+                series: [{
+                    name: '评分分布',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    data: movieData.ratings.map((item, index) => ({
+                        value: item.value, name: item.name,
+                        itemStyle: { color: ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'][index] }
+                    })),
+                    emphasis: { label: { show: true, fontSize: '18', fontWeight: 'bold' } },
+                    labelLine: { show: false }
+                }]
+            };
+            chart.setOption(option);
+            window.addEventListener('resize', () => chart.resize());
+        }
+
+        function initRegionChart() {
+            const chart = echarts.init(document.getElementById('region-chart'));
+            const option = {
+                tooltip: { trigger: 'item', formatter: '{b}: {c}部 ({d}%)' },
+                legend: { bottom: '5%', left: 'center' },
+                series: [{
+                    name: '地域分布',
+                    type: 'pie',
+                    radius: '70%',
+                    center: ['50%', '45%'],
+                    data: movieData.regions.map((item, index) => ({
+                        value: item.value, name: item.name,
+                        itemStyle: { color: ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'][index] }
+                    })),
+                    label: { formatter: '{b}\n{d}%' }
+                }]
+            };
+            chart.setOption(option);
+            window.addEventListener('resize', () => chart.resize());
+        }
+
+        function initActorChart() {
+            const chart = echarts.init(document.getElementById('actor-chart'));
+            const topActors = movieData.actors.slice(0, 10);
+            const option = {
+                tooltip: { trigger: 'axis' },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'value' },
+                yAxis: { type: 'category', data: topActors.map(item => item.name).reverse() },
+                series: [{
+                    name: '出演电影数量',
+                    type: 'bar',
+                    data: topActors.map(item => ({ value: item.value })).reverse(),
+                    label: { show: true, position: 'right', formatter: '{c}部' }
+                }]
+            };
+            chart.setOption(option);
+            window.addEventListener('resize', () => chart.resize());
+        }
+
+        function initTop10Chart() {
+            const chart = echarts.init(document.getElementById('top10-chart'));
+            const option = {
+                tooltip: { trigger: 'axis' },
+                grid: { left: '3%', right: '4%', bottom: '3%', top: '3%', containLabel: true },
+                xAxis: { type: 'value', max: 10, axisLabel: { formatter: '{value}分' } },
+                yAxis: { type: 'category', data: movieData.top10.map(item => item.name).reverse() },
+                series: [{
+                    name: '评分',
+                    type: 'bar',
+                    data: movieData.top10.map(item => ({ value: item.rating })).reverse(),
+                    label: { show: true, position: 'right', formatter: '{c}分' }
+                }]
+            };
+            chart.setOption(option);
+            window.addEventListener('resize', () => chart.resize());
+        }
+
+        function initDataTable() {
+            const tableBody = document.getElementById('movie-table-body');
+            const searchInput = document.getElementById('search-input');
+            
+            function renderTable(movies) {
+                tableBody.innerHTML = movies.map(movie => `
+                    <tr>
+                        <td><span class="highlight">${movie.rank}</span></td>
+                        <td>${movie.name}</td>
+                        <td><span class="highlight">${movie.rating}</span></td>
+                        <td>${movie.actors}</td>
+                        <td>${movie.year}</td>
+                        <td>${movie.region}</td>
+                    </tr>
+                `).join('');
+            }
+            
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const filteredMovies = movieData.movies.filter(movie => 
+                    movie.name.toLowerCase().includes(searchTerm) ||
+                    movie.actors.toLowerCase().includes(searchTerm)
+                );
+                renderTable(filteredMovies);
+            });
+            
+            renderTable(movieData.movies);
+        }
+    </script>
+</body>
+</html>

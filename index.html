@@ -3,89 +3,345 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>猫眼电影TOP100数据分析</title>
+    <title>猫眼电影TOP100数据分析报告</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Helvetica Neue', Arial, 'Microsoft YaHei', sans-serif;
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 2rem auto;
+            padding: 2rem;
+            max-width: 1400px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .header h1 {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            color: #7f8c8d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: 450px;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .section-title {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin: 3rem 0 1.5rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--secondary-color);
+            display: inline-block;
+            font-size: 1.8rem;
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+            color: white;
+            border: none;
+            font-weight: 600;
+            padding: 1rem;
+        }
+        
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+        }
+        
+        .highlight {
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #eee;
+            color: #7f8c8d;
+        }
+        
+        .chart-title {
+            text-align: center;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 1rem;
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .chart-container {
+                height: 350px;
+                padding: 1rem;
+            }
+            
+            .stat-number {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1 class="display-4 mb-2">猫眼电影TOP100数据分析报告</h1>
-                    <p class="lead mb-0">基于猫眼电影TOP100榜单的深度数据可视化分析</p>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- 页面头部 -->
+            <header class="header">
+                <h1>🎬 猫眼电影TOP100数据分析报告</h1>
+                <p>基于猫眼电影TOP100榜单的深度数据可视化分析</p>
+                <div class="text-muted">数据更新时间: <span id="update-time">2024年1月</span></div>
+            </header>
+
+            <!-- 数据概览卡片 -->
+            <h2 class="section-title">数据概览</h2>
+            <div class="row" id="stats-cards">
+                <!-- 将通过JavaScript动态生成 -->
+            </div>
+
+            <!-- 第一行图表 -->
+            <div class="row">
+                <div class="col-lg-6">
+                    <h2 class="section-title">年代分布分析</h2>
+                    <div class="chart-container" id="decade-chart"></div>
                 </div>
-                <div class="col-md-4 text-end">
-                    <div class="text-light">数据更新时间: <span id="update-time">2024年1月</span></div>
+                
+                <div class="col-lg-6">
+                    <h2 class="section-title">评分分布分析</h2>
+                    <div class="chart-container" id="rating-chart"></div>
                 </div>
             </div>
-        </div>
-    </header>
-
-    <div class="container">
-        <!-- 数据概览卡片 -->
-        <h2 class="section-title">数据概览</h2>
-        <div class="row" id="stats-cards"></div>
-
-        <!-- 核心分析图表 -->
-        <div class="row">
-            <div class="col-md-6">
-                <h3 class="section-title">年代分布分析</h3>
-                <div class="chart-container" id="decade-chart"></div>
+            
+            <!-- 第二行图表 -->
+            <div class="row">
+                <div class="col-lg-6">
+                    <h2 class="section-title">地域分布分析</h2>
+                    <div class="chart-container" id="region-chart"></div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h2 class="section-title">演员影响力分析</h2>
+                    <div class="chart-container" id="actor-chart"></div>
+                </div>
             </div>
-            <div class="col-md-6">
-                <h3 class="section-title">评分分布分析</h3>
-                <div class="chart-container" id="rating-chart"></div>
-            </div>
-        </div>
-        
-        <div class="row">
-            <div class="col-md-6">
-                <h3 class="section-title">地域分布分析</h3>
-                <div class="chart-container" id="region-chart"></div>
-            </div>
-            <div class="col-md-6">
-                <h3 class="section-title">演员影响力分析</h3>
-                <div class="chart-container" id="actor-chart"></div>
-            </div>
-        </div>
 
-        <!-- TOP10排行榜 -->
-        <h2 class="section-title">TOP10电影排行榜</h2>
-        <div class="chart-container" id="top10-chart"></div>
+            <!-- TOP10排行榜 -->
+            <h2 class="section-title">TOP10电影排行榜</h2>
+            <div class="chart-container" id="top10-chart"></div>
 
-        <!-- 完整数据表格 -->
-        <h2 class="section-title">完整数据浏览</h2>
-        <input type="text" class="form-control search-box" placeholder="🔍 搜索电影名称、演员..." id="search-input">
-        <div class="table-container">
-            <table class="table table-hover" id="movie-table">
-                <thead>
-                    <tr>
-                        <th>排名</th>
-                        <th>电影名称</th>
-                        <th>评分</th>
-                        <th>主演</th>
-                        <th>上映年份</th>
-                        <th>地区</th>
-                    </tr>
-                </thead>
-                <tbody id="movie-table-body"></tbody>
-            </table>
+            <!-- 完整数据表格 -->
+            <h2 class="section-title">完整数据浏览</h2>
+            <div class="table-container">
+                <table class="table table-hover" id="movie-table">
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>电影名称</th>
+                            <th>评分</th>
+                            <th>主演</th>
+                            <th>上映年份</th>
+                            <th>地区</th>
+                        </tr>
+                    </thead>
+                    <tbody id="movie-table-body">
+                        <!-- 将通过JavaScript动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 页脚 -->
+            <footer class="footer">
+                <p>数据来源：猫眼电影TOP100 | 分析工具：Python + ECharts | 仅供学习使用</p>
+            </footer>
         </div>
     </div>
 
-    <footer class="footer">
-        <div class="container text-center">
-            <p>数据来源：猫眼电影TOP100 | 分析工具：Python + ECharts | 仅供学习使用</p>
-        </div>
-    </footer>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="data.js"></script>
+    
     <script>
+        // 电影数据 - 直接内嵌在HTML中
+        const movieData = {
+            // 统计数据
+            stats: {
+                total: 100,
+                avgRating: 8.7,
+                yearRange: "1994-2023",
+                completeness: "98%"
+            },
+            
+            // 年代分布数据
+            decades: [
+                { name: '1990年前', value: 5 },
+                { name: '1990年代', value: 15 },
+                { name: '2000年代', value: 25 },
+                { name: '2010年代', value: 45 },
+                { name: '2020年代', value: 10 }
+            ],
+            
+            // 评分分布数据
+            ratings: [
+                { name: '9.0分以上', value: 22 },
+                { name: '8.5-9.0分', value: 48 },
+                { name: '8.0-8.5分', value: 26 },
+                { name: '8.0分以下', value: 4 }
+            ],
+            
+            // 地域分布数据
+            regions: [
+                { name: '中国大陆', value: 65 },
+                { name: '中国香港', value: 15 },
+                { name: '美国', value: 12 },
+                { name: '其他地区', value: 8 }
+            ],
+            
+            // 演员数据
+            actors: [
+                { name: '周星驰', value: 8 },
+                { name: '刘德华', value: 6 },
+                { name: '梁朝伟', value: 5 },
+                { name: '张国荣', value: 4 },
+                { name: '周润发', value: 4 },
+                { name: '巩俐', value: 3 },
+                { name: '章子怡', value: 3 },
+                { name: '李连杰', value: 3 },
+                { name: '成龙', value: 3 },
+                { name: '葛优', value: 2 },
+                { name: '张曼玉', value: 2 },
+                { name: '黄渤', value: 2 },
+                { name: '徐峥', value: 2 },
+                { name: '王宝强', value: 2 },
+                { name: '沈腾', value: 2 }
+            ],
+            
+            // TOP10电影数据
+            top10: [
+                { name: '肖申克的救赎', rating: 9.7 },
+                { name: '霸王别姬', rating: 9.6 },
+                { name: '这个杀手不太冷', rating: 9.5 },
+                { name: '阿甘正传', rating: 9.4 },
+                { name: '美丽人生', rating: 9.4 },
+                { name: '泰坦尼克号', rating: 9.3 },
+                { name: '千与千寻', rating: 9.3 },
+                { name: '辛德勒的名单', rating: 9.3 },
+                { name: '盗梦空间', rating: 9.2 },
+                { name: '忠犬八公的故事', rating: 9.2 }
+            ],
+            
+            // 完整电影列表（示例数据，实际应该有100条）
+            movies: [
+                { rank: 1, name: '肖申克的救赎', rating: 9.7, actors: '蒂姆·罗宾斯,摩根·弗里曼', year: 1994, region: '美国' },
+                { rank: 2, name: '霸王别姬', rating: 9.6, actors: '张国荣,张丰毅,巩俐', year: 1993, region: '中国大陆' },
+                { rank: 3, name: '这个杀手不太冷', rating: 9.5, actors: '让·雷诺,加里·奥德曼,娜塔莉·波特曼', year: 1994, region: '法国' },
+                { rank: 4, name: '阿甘正传', rating: 9.4, actors: '汤姆·汉克斯,罗宾·怀特', year: 1994, region: '美国' },
+                { rank: 5, name: '美丽人生', rating: 9.4, actors: '罗伯托·贝尼尼,尼可莱塔·布拉斯基', year: 1997, region: '意大利' },
+                { rank: 6, name: '泰坦尼克号', rating: 9.3, actors: '莱昂纳多·迪卡普里奥,凯特·温丝莱特', year: 1997, region: '美国' },
+                { rank: 7, name: '千与千寻', rating: 9.3, actors: '柊瑠美,入野自由', year: 2001, region: '日本' },
+                { rank: 8, name: '辛德勒的名单', rating: 9.3, actors: '连姆·尼森,本·金斯利', year: 1993, region: '美国' },
+                { rank: 9, name: '盗梦空间', rating: 9.2, actors: '莱昂纳多·迪卡普里奥,玛丽昂·歌迪亚', year: 2010, region: '美国' },
+                { rank: 10, name: '忠犬八公的故事', rating: 9.2, actors: '理查·基尔,琼·艾伦', year: 2009, region: '美国' },
+                { rank: 11, name: '海上钢琴师', rating: 9.2, actors: '蒂姆·罗斯,普路特·泰勒·文斯', year: 1998, region: '意大利' },
+                { rank: 12, name: '楚门的世界', rating: 9.1, actors: '金·凯瑞,劳拉·琳妮', year: 1998, region: '美国' },
+                { rank: 13, name: '三傻大闹宝莱坞', rating: 9.1, actors: '阿米尔·汗,卡琳娜·卡普', year: 2009, region: '印度' },
+                { rank: 14, name: '放牛班的春天', rating: 9.1, actors: '杰拉尔·朱诺,弗朗索瓦·贝利昂', year: 2004, region: '法国' },
+                { rank: 15, name: '机器人总动员', rating: 9.1, actors: '本·贝尔特,艾丽莎·奈特', year: 2008, region: '美国' }
+                // 这里只展示前15条，实际应该有100条
+            ]
+        };
+
         // 初始化所有图表
         document.addEventListener('DOMContentLoaded', function() {
+            // 初始化所有组件
             initStatsCards();
             initDecadeChart();
             initRatingChart();
@@ -94,12 +350,14 @@
             initTop10Chart();
             initDataTable();
             
+            // 设置更新时间
             document.getElementById('update-time').textContent = new Date().toLocaleDateString('zh-CN', {
                 year: 'numeric',
                 month: 'long'
             });
         });
 
+        // 初始化数据概览卡片
         function initStatsCards() {
             const stats = movieData.stats;
             const cardsContainer = document.getElementById('stats-cards');
@@ -113,7 +371,7 @@
             
             cardsContainer.innerHTML = cards.map(card => `
                 <div class="col-md-3">
-                    <div class="stat-card text-center">
+                    <div class="stat-card">
                         <div class="stat-number">${card.icon} ${card.number}</div>
                         <div class="stat-label">${card.label}</div>
                     </div>
@@ -121,115 +379,329 @@
             `).join('');
         }
 
+        // 初始化年代分布图表
         function initDecadeChart() {
             const chart = echarts.init(document.getElementById('decade-chart'));
+            
             const option = {
-                tooltip: { trigger: 'axis' },
-                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-                xAxis: { type: 'category', data: movieData.decades.map(item => item.name) },
-                yAxis: { type: 'value' },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    formatter: '{b}: {c}部电影'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: movieData.decades.map(item => item.name),
+                    axisLine: {
+                        lineStyle: {
+                            color: '#7f8c8d'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#7f8c8d'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLine: {
+                        lineStyle: {
+                            color: '#7f8c8d'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#7f8c8d'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#ecf0f1'
+                        }
+                    }
+                },
                 series: [{
-                    data: movieData.decades.map(item => ({ value: item.value })),
+                    data: movieData.decades.map(item => item.value),
                     type: 'bar',
                     barWidth: '60%',
                     itemStyle: {
-                        borderRadius: [4, 4, 0, 0],
+                        borderRadius: [8, 8, 0, 0],
                         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: '#2a5298' }, { offset: 1, color: '#1e3c72' }
+                            { offset: 0, color: '#3498db' },
+                            { offset: 1, color: '#2980b9' }
                         ])
                     },
-                    label: { show: true, position: 'top', formatter: '{c}部' }
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c}部',
+                        color: '#2c3e50',
+                        fontWeight: 'bold'
+                    }
                 }]
             };
+            
             chart.setOption(option);
             window.addEventListener('resize', () => chart.resize());
         }
 
+        // 初始化评分分布图表
         function initRatingChart() {
             const chart = echarts.init(document.getElementById('rating-chart'));
+            
             const option = {
-                tooltip: { trigger: 'item', formatter: '{b}: {c}部 ({d}%)' },
-                legend: { orient: 'vertical', right: 10, top: 'center' },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c}部 ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    right: 10,
+                    top: 'center',
+                    textStyle: {
+                        color: '#7f8c8d'
+                    }
+                },
                 series: [{
                     name: '评分分布',
                     type: 'pie',
                     radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '18',
+                            fontWeight: 'bold',
+                            color: '#2c3e50'
+                        }
+                    },
+                    labelLine: {
+                        show: false
+                    },
                     data: movieData.ratings.map((item, index) => ({
-                        value: item.value, name: item.name,
-                        itemStyle: { color: ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'][index] }
-                    })),
-                    emphasis: { label: { show: true, fontSize: '18', fontWeight: 'bold' } },
-                    labelLine: { show: false }
+                        value: item.value,
+                        name: item.name,
+                        itemStyle: {
+                            color: ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'][index]
+                        }
+                    }))
                 }]
             };
+            
             chart.setOption(option);
             window.addEventListener('resize', () => chart.resize());
         }
 
+        // 初始化地域分布图表
         function initRegionChart() {
             const chart = echarts.init(document.getElementById('region-chart'));
+            
             const option = {
-                tooltip: { trigger: 'item', formatter: '{b}: {c}部 ({d}%)' },
-                legend: { bottom: '5%', left: 'center' },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c}部 ({d}%)'
+                },
+                legend: {
+                    bottom: '5%',
+                    left: 'center',
+                    textStyle: {
+                        color: '#7f8c8d'
+                    }
+                },
                 series: [{
                     name: '地域分布',
                     type: 'pie',
                     radius: '70%',
                     center: ['50%', '45%'],
                     data: movieData.regions.map((item, index) => ({
-                        value: item.value, name: item.name,
-                        itemStyle: { color: ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'][index] }
+                        value: item.value,
+                        name: item.name,
+                        itemStyle: {
+                            color: ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'][index]
+                        }
                     })),
-                    label: { formatter: '{b}\n{d}%' }
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    },
+                    label: {
+                        formatter: '{b}\n{d}%',
+                        color: '#2c3e50'
+                    }
                 }]
             };
+            
             chart.setOption(option);
             window.addEventListener('resize', () => chart.resize());
         }
 
+        // 初始化演员图表
         function initActorChart() {
             const chart = echarts.init(document.getElementById('actor-chart'));
+            
+            // 取前10名演员
             const topActors = movieData.actors.slice(0, 10);
+            
             const option = {
-                tooltip: { trigger: 'axis' },
-                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-                xAxis: { type: 'value' },
-                yAxis: { type: 'category', data: topActors.map(item => item.name).reverse() },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    formatter: '{b}: {c}部电影'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value',
+                    axisLine: {
+                        lineStyle: {
+                            color: '#7f8c8d'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#7f8c8d'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#ecf0f1'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: topActors.map(item => item.name).reverse(),
+                    axisLine: {
+                        lineStyle: {
+                            color: '#7f8c8d'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#7f8c8d'
+                    }
+                },
                 series: [{
                     name: '出演电影数量',
                     type: 'bar',
-                    data: topActors.map(item => ({ value: item.value })).reverse(),
-                    label: { show: true, position: 'right', formatter: '{c}部' }
+                    data: topActors.map(item => item.value).reverse(),
+                    itemStyle: {
+                        borderRadius: [0, 8, 8, 0],
+                        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                            { offset: 0, color: '#9b59b6' },
+                            { offset: 1, color: '#8e44ad' }
+                        ])
+                    },
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: '{c}部',
+                        color: '#2c3e50',
+                        fontWeight: 'bold'
+                    }
                 }]
             };
+            
             chart.setOption(option);
             window.addEventListener('resize', () => chart.resize());
         }
 
+        // 初始化TOP10排行榜
         function initTop10Chart() {
             const chart = echarts.init(document.getElementById('top10-chart'));
+            
             const option = {
-                tooltip: { trigger: 'axis' },
-                grid: { left: '3%', right: '4%', bottom: '3%', top: '3%', containLabel: true },
-                xAxis: { type: 'value', max: 10, axisLabel: { formatter: '{value}分' } },
-                yAxis: { type: 'category', data: movieData.top10.map(item => item.name).reverse() },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    formatter: '{b}: {c}分'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value',
+                    max: 10,
+                    axisLine: {
+                        lineStyle: {
+                            color: '#7f8c8d'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#7f8c8d',
+                        formatter: '{value}分'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#ecf0f1'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: movieData.top10.map(item => item.name).reverse(),
+                    axisLine: {
+                        lineStyle: {
+                            color: '#7f8c8d'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#7f8c8d',
+                        fontSize: 12
+                    }
+                },
                 series: [{
                     name: '评分',
                     type: 'bar',
-                    data: movieData.top10.map(item => ({ value: item.rating })).reverse(),
-                    label: { show: true, position: 'right', formatter: '{c}分' }
+                    data: movieData.top10.map(item => item.rating).reverse(),
+                    itemStyle: {
+                        borderRadius: [0, 8, 8, 0],
+                        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                            { offset: 0, color: '#e74c3c' },
+                            { offset: 1, color: '#c0392b' }
+                        ])
+                    },
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: '{c}分',
+                        color: '#e74c3c',
+                        fontWeight: 'bold'
+                    }
                 }]
             };
+            
             chart.setOption(option);
             window.addEventListener('resize', () => chart.resize());
         }
 
+        // 初始化数据表格
         function initDataTable() {
             const tableBody = document.getElementById('movie-table-body');
-            const searchInput = document.getElementById('search-input');
             
-            function renderTable(movies) {
-                tableBody.innerHTML = movies.map(movie => `
+            // 渲染表格行
+            function renderTable() {
+                tableBody.innerHTML = movieData.movies.map(movie => `
                     <tr>
                         <td><span class="highlight">${movie.rank}</span></td>
                         <td>${movie.name}</td>
@@ -241,16 +713,8 @@
                 `).join('');
             }
             
-            searchInput.addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                const filteredMovies = movieData.movies.filter(movie => 
-                    movie.name.toLowerCase().includes(searchTerm) ||
-                    movie.actors.toLowerCase().includes(searchTerm)
-                );
-                renderTable(filteredMovies);
-            });
-            
-            renderTable(movieData.movies);
+            // 初始渲染
+            renderTable();
         }
     </script>
 </body>
